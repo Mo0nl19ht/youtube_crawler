@@ -1,16 +1,28 @@
 from apiclient.discovery import build
+from apiclient.errors import HttpError
+from oauth2client.tools import argparser
+from pytube import YouTube
+from xml.etree import ElementTree
+from tqdm import tqdm
+import pandas as pd
+import os
 
 
 class Crawler:
-    def __init__(self, key_list, key_index=0):
+    def __init__(self, path, key_list, key_index=0):
         self.service_name = "youtube"
         self.api_version = "v3"
+        # 저장할 곳의 경로
+        self.path = path
         self.key_list = key_list
         self.key_len = len(self.key_list)
         self.key_index = key_index
         self.key_cnt = 0
-        self.youtube = build(self.service_name, self.api_version,
-                             developerKey=self.key_list[self.key_index])
+        self.youtube = self.get_youtube(self.key_list[self.key_index])
+
+    def get_youtube(self, key):
+        return build(self.service_name, self.api_version,
+                     developerKey=key)
 
     def change_key(self):
 
@@ -168,61 +180,48 @@ class Crawler:
             search_response = self.get_search_list(
                 self.youtube, query, topicId, videoCaption, maxResult, regionCode)
         except:
-            if change_key() == 0:
+            if self.change_key() == 0:
                 return 0
 
-            youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                            developerKey=key_list[key_index])
+            youtube = self.get_youtube(self.key_list[self.key_index])
 
             print("다시 검색중...")
-            search_response = get_search_list(youtube, query)
+            search_response = self.get_search_list(youtube, query)
 
         videos = []
 
         while search_response:
 
             for search_result in search_response.get("items", []):
-                if search_result["id"]["kind"] == "youtube#video":  # 필요없을수도?
+                if search_result["id"]["kind"] == "youtube#video":
                     videos.append(
                         (search_result["id"]["videoId"], search_result["snippet"]["title"]))
-
             try:
                 if 'nextPageToken' in search_response:
-                    search_response = get_search_list(
+                    search_response = self.get_search_list(
                         youtube, query, search_response['nextPageToken'])
                 else:
                     break
             except:
-                if change_key() == 0:
+                if self.change_key() == 0:
                     return 0
 
-                youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-                                developerKey=key_list[key_index])
+                youtube = self.get_youtube(self.key_list[self.key_index])
                 # 다음 키를 가져와서 다시 실행
                 if 'nextPageToken' in search_response:
-                    search_response = get_search_list(
+                    search_response = self.get_search_list(
                         youtube, query, search_response['nextPageToken'])
-                # 새로운 키니까 50개 할당
                 else:
                     break
 
-        folder_spot = './captions/'+'videoIds'
-        os.makedirs(folder_spot, exist_ok=True)
-
+        folder_ids = f'{self.path}/videoIds'
+        os.makedirs(folder_ids, exist_ok=True)
         df = pd.DataFrame(videos, columns=['id', 'title'])
-        df.to_csv(f"{folder_spot}/{spot}_videoIds.csv",  # "지역 여행 브이로그" 라고 검색
+        df = df.drop_duplicates()  # 혹시 모를 중복 제거
+        df.to_csv(f"{folder_ids}/{query}_videoIds.csv",
                   index=False, encoding="utf-8-sig")
 
-        li = []
-        for index, title in enumerate(df['title']):
-            if not (('여행' in title and spot in title) or ('브이로그' in title and spot in title) or ('vlog' in title and spot in title) or ('travel' in title and spot in title)):
-                li.append(index)
-
-        df = df.drop(li)
-
-        df = df.drop_duplicates()  # 혹시 모를 중복 제거
         cnt_videos = len(df)
-        df.to_csv(f"{folder_spot}/{spot}여행_videoIds.csv", index=False,
-                  encoding="utf-8-sig")  # 위 Ids를 제목으로 필터링 후
-        print(f"{spot}지역 관련 영상 갯수 : {cnt_videos}\n")
+        print(f"검색어 : {query} 영상 갯수 : {cnt_videos}")
+
         return df

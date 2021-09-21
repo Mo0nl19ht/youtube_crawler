@@ -47,7 +47,6 @@ class Crawler:
         return self.youtube.search().list(
             q=query,
             part="id,snippet",
-
             topicId=topicId,  # "/m/019_rr, /m/07bxq, /m/03glg",  # lifestyle, tourism, hobby
             type="video",
             videoCaption=videoCaption,  # 캡션 있는 동영상만
@@ -173,9 +172,6 @@ class Crawler:
         print("검색을 시작합니다")
         try:
             print(f"사용중인 키 : {self.key_list[self.key_index]}")
-            # youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-            #                 developerKey=key_list[key_index])
-
             print("검색중...")
             search_response = self.get_search_list(
                 self.youtube, query, topicId, videoCaption, maxResult, regionCode)
@@ -183,10 +179,11 @@ class Crawler:
             if self.change_key() == 0:
                 return 0
 
-            youtube = self.get_youtube(self.key_list[self.key_index])
+            self.youtube = self.get_youtube(self.key_list[self.key_index])
 
             print("다시 검색중...")
-            search_response = self.get_search_list(youtube, query)
+            search_response = self.get_search_list(
+                self.youtube, query, topicId, videoCaption, maxResult, regionCode)
 
         videos = []
 
@@ -199,8 +196,9 @@ class Crawler:
             try:
                 if 'nextPageToken' in search_response:
                     search_response = self.get_search_list(
-                        youtube, query, search_response['nextPageToken'])
+                        self.youtube, query, topicId, videoCaption, maxResult, regionCode, search_response['nextPageToken'])
                 else:
+
                     break
             except:
                 if self.change_key() == 0:
@@ -210,7 +208,7 @@ class Crawler:
                 # 다음 키를 가져와서 다시 실행
                 if 'nextPageToken' in search_response:
                     search_response = self.get_search_list(
-                        youtube, query, search_response['nextPageToken'])
+                        self.youtube, query, topicId, videoCaption, maxResult, regionCode, search_response['nextPageToken'])
                 else:
                     break
 
@@ -218,10 +216,73 @@ class Crawler:
         os.makedirs(folder_ids, exist_ok=True)
         df = pd.DataFrame(videos, columns=['id', 'title'])
         df = df.drop_duplicates()  # 혹시 모를 중복 제거
-        df.to_csv(f"{folder_ids}/{query}_videoIds.csv",
-                  index=False, encoding="utf-8-sig")
+
+        # 직접 csv까지 만들어주기엔 폴더명 등 제약사항있음
+
+        # df.to_csv(f"{folder_ids}/{query}_videoIds.csv",
+        #           index=False, encoding="utf-8-sig")
 
         cnt_videos = len(df)
+
         print(f"검색어 : {query} 영상 갯수 : {cnt_videos}")
 
         return df
+
+    def get_by_language(self, yt, language, id):
+        caption = yt.captions[language]
+
+        if caption != None:
+
+            xml = caption.xml_captions
+
+            root = ElementTree.fromstring(xml)
+            captions = []
+            iter_element = root.iter(
+                tag="p")
+
+            for i, element in enumerate(iter_element):
+                caption = {}
+                caption['index'] = i
+                caption['contents'] = element.text  # 자막 내용 저장
+                captions.append(caption)
+
+            out_df = pd.DataFrame(captions, columns=['index', 'contents'])
+
+            out_df.to_csv(f"{self.path}/captions/{language}/caption_{id}.csv",
+                          index=False, encoding="utf-8-sig")
+
+    def make_captions(self, df, is_En=False):
+
+        print()
+        print(f"자막 생성중")
+        print()
+
+        url = "https://youtube.com/watch?v="
+
+        cnt_ko = 0
+        cnt_en = 0
+        folder_en = f'{self.path}/captions/'+'en'
+        folder_ko = f'{self.path}/captions/'+'ko'
+        os.makedirs(folder_en, exist_ok=True)
+        os.makedirs(folder_ko, exist_ok=True)
+        for id in tqdm(df['id']):
+
+            yt = YouTube(url+id)
+
+            # 한글 자막 확인
+            try:
+                language = "ko"
+                self.get_by_language(yt, language, id)
+                cnt_ko += 1
+            except:
+                pass
+            # 영어 자막
+            if is_En:
+                try:
+                    language = "en"
+                    self.get_by_language(yt, language, id)
+                    cnt_en += 1
+                except:
+                    pass
+
+        print(f"한글자막 : {cnt_ko}개 영어자막 : {cnt_en}개\n")

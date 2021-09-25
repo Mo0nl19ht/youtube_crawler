@@ -60,8 +60,6 @@ class Crawler:
 
     def youtube_search(self, query, topicId=None, videoCaption=None, maxResult=50, regionCode="KR"):
         """
-
-
         topicId
 
         사용예시:
@@ -325,10 +323,62 @@ class Crawler:
                     en_no.append(id)
                     pass
 
-        print(f"한글자막 : {cnt_ko}개 영어자막 : {cnt_en}개\n")
-        print(f"한글자막 : {cnt_ko_no}개 없음 영어자막 : {cnt_en_no}개 없음")
+        print(f"한글자막 : {cnt_ko}개 , 영어자막 : {cnt_en}개\n")
+        print(f"한글자막 없음: {cnt_ko_no}개 , 영어자막 없음 : {cnt_en_no}개")
 
         if is_En:
             return ko_no, en_no
         else:
             return ko_no
+
+    def get_search_list_desc(self, id):
+        return self.youtube.videos().list(
+            part='snippet',
+            id=id
+        ).execute()
+
+    def get_descriptions(self,df):
+        """
+        영상의 상세정보를 받아와서
+        csv파일을 만들고
+        DataFrame을 반환합니다
+        """
+
+        videos = []
+
+        for index in tqdm(df.index):
+            id = df.loc[index, 'id']
+            title = df.loc[index, 'title']
+
+            try:
+                search_response = self.get_search_list_desc(id)
+            except:
+                if self.change_key() == 0:
+                    return 0
+                self.youtube = self.get_youtube(self.key_list[self.key_index])
+
+                print("키 변경\n다시 검색중...\n")
+                search_response = self.get_search_list_desc(id)
+
+            try:
+                search_result = search_response.get(
+                    "items", [])[0]  
+            # 영상이 접근 불가 처리된 경우
+            except:
+                print(f"id : {id} 영상 접근 불가(비공개 or 삭제))")
+                pass
+
+            videos.append((id, title, search_result["snippet"]["description"]))
+
+        df = pd.DataFrame(videos, columns=['id', 'title', 'desc'])
+        df = df.drop_duplicates()  # 혹시 모를 중복 제거
+
+        now = datetime.now()
+        mic = now.microsecond//10000
+        n = f"{now.month}{now.day}_{now.hour}_{now.minute}_{mic}"
+        path=f"{self.path}/description"
+        os.makedirs(path, exist_ok=True)
+        df.to_csv(f"{path}/{n}_title_desc.csv",
+                index=False, encoding="utf-8-sig")
+        
+        return df

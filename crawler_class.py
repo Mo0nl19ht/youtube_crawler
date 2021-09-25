@@ -12,7 +12,11 @@ from datetime import datetime
 
 
 class Crawler:
+
     def __init__(self, path, key_list, key_index=0):
+        """
+        경로, apikey_list, 사용할 키의 index
+        """
         self.service_name = "youtube"
         self.api_version = "v3"
         # 저장할 곳의 경로
@@ -45,7 +49,7 @@ class Crawler:
 
         return 1
 
-    def get_search_list(self, query, topicId=None, videoCaption=None, maxResult=50, regionCode="KR", nextPageToken=None):
+    def get_search_list(self, query, topicId=None, videoCaption=None, regionCode="KR", nextPageToken=None):
 
         return self.youtube.search().list(
             q=query,
@@ -53,12 +57,12 @@ class Crawler:
             topicId=topicId,  # "/m/019_rr, /m/07bxq, /m/03glg",  # lifestyle, tourism, hobby
             type="video",
             videoCaption=videoCaption,  # 캡션 있는 동영상만
-            maxResults=maxResult,  # max == 50
+            maxResults=50,
             regionCode=regionCode,
             pageToken=nextPageToken
         ).execute()
 
-    def youtube_search(self, query, topicId=None, videoCaption=None, maxResult=50, regionCode="KR"):
+    def youtube_search(self, query, topicId=None, videoCaption=None, regionCode="KR"):
         """
         topicId
 
@@ -173,31 +177,31 @@ class Crawler:
         print("검색을 시작합니다")
         try:
             print(f"사용중인 키 : {self.key_list[self.key_index]}")
-            print("검색중...")
+            print("검색중")
             search_response = self.get_search_list(
-                query, topicId, videoCaption, maxResult, regionCode)
+                query, topicId, videoCaption, regionCode)
         except:
             if self.change_key() == 0:
                 return 0
 
             self.youtube = self.get_youtube(self.key_list[self.key_index])
 
-            print("다시 검색중...")
+            print("다시 검색중")
             search_response = self.get_search_list(
-                query, topicId, videoCaption, maxResult, regionCode)
+                query, topicId, videoCaption, regionCode)
 
         videos = []
 
         while search_response:
 
-            for search_result in search_response.get("items", []):
+            for search_result in search_response['items']:
                 if search_result["id"]["kind"] == "youtube#video":
                     videos.append(
                         (search_result["id"]["videoId"], search_result["snippet"]["title"]))
             try:
                 if 'nextPageToken' in search_response:
                     search_response = self.get_search_list(
-                        query, topicId, videoCaption, maxResult, regionCode, search_response['nextPageToken'])
+                        query, topicId, videoCaption, regionCode, search_response['nextPageToken'])
                 else:
 
                     break
@@ -209,7 +213,7 @@ class Crawler:
                 # 다음 키를 가져와서 다시 실행
                 if 'nextPageToken' in search_response:
                     search_response = self.get_search_list(
-                        query, topicId, videoCaption, maxResult, regionCode, search_response['nextPageToken'])
+                        query, topicId, videoCaption, regionCode, search_response['nextPageToken'])
                 else:
                     break
 
@@ -269,7 +273,7 @@ class Crawler:
         """
 
         print()
-        print(f"자막 생성중")
+        print(f"자막을 가져옵니다")
         print()
 
         url = "https://youtube.com/watch?v="
@@ -343,7 +347,7 @@ class Crawler:
         csv파일을 만들고
         DataFrame을 반환합니다
         """
-
+        print("영상의 상세정보를 가져옵니다")
         videos = []
 
         for index in tqdm(df.index):
@@ -361,14 +365,13 @@ class Crawler:
                 search_response = self.get_search_list_desc(id)
 
             try:
-                search_result = search_response.get(
-                    "items", [])[0]  
+                search_result = search_response['items'][0]  
             # 영상이 접근 불가 처리된 경우
             except:
                 print(f"id : {id} 영상 접근 불가(비공개 or 삭제))")
                 pass
 
-            videos.append((id, title, search_result["snippet"]["description"]))
+            videos.append((id,title, search_result["snippet"]["description"]))
 
         df = pd.DataFrame(videos, columns=['id', 'title', 'desc'])
         df = df.drop_duplicates()  # 혹시 모를 중복 제거
@@ -382,3 +385,70 @@ class Crawler:
                 index=False, encoding="utf-8-sig")
         
         return df
+    def get_search_list_comment(self, id,pageToken=None):
+        return self.youtube.commentThreads().list(
+            part='snippet',
+            videoId=id,
+            pageToken=pageToken,
+            maxResults=100
+        ).execute()
+
+    def get_comments(self,df):
+        """
+        영상의 댓글을 가져와서 저장합니다.
+        댓글을 가져오는데 실패한 영상의 id들을 반환합니다
+
+        """
+        path=f"{self.path}/comments"
+        os.makedirs(path, exist_ok=True)
+        cnt=0
+        no = []
+        print("댓글 정보를 가져옵니다")
+
+        for index in tqdm(df.iterrows()):
+            id = index[1]['id']
+            try:
+                search_response = self.get_search_list_comment(id)
+            except:
+                if self.change_key() == 0:
+                    return 0
+                self.youtube = self.get_youtube(self.key_list[self.key_index])
+
+                print("키 변경\n다시 검색중...\n")
+                search_response = self.get_search_list_comment(id)
+
+            
+            comments = []
+
+            while search_response:
+
+                for search_result in search_response['items']:
+                    comment = search_result['snippet']['topLevelComment']['snippet']
+                    comments.append([html.unescape(comment['authorDisplayName']),html.unescape(comment['textDisplay']), comment['likeCount']])
+                try:
+                    if 'nextPageToken' in search_response:
+                        search_response = self.get_search_list_comment(id, search_response['nextPageToken'])
+                    else:
+                        break
+                except:
+                    if self.change_key() == 0:
+                        return 0
+                    self.youtube = self.get_youtube(self.key_list[self.key_index])
+                    # 다음 키를 가져와서 다시 실행
+                    if 'nextPageToken' in search_response:
+                        search_response = self.get_search_list_comment(id, search_response['nextPageToken'])
+                    else:
+                        break
+            try:
+                df = pd.DataFrame(comments)
+                df.columns=['author','comment','like']
+                df.to_csv(f"{path}/{id}_comments.csv",
+                        index=False, encoding="utf-8-sig")
+            except:
+                cnt+=1
+                no.append(id)
+                pass
+        
+        print(f"{len(df)}중의 {cnt}개의 영상의 댓글을 불러오는데 실패하였습니다")
+
+        return no

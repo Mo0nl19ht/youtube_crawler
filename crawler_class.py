@@ -235,7 +235,7 @@ class Crawler:
 
         return df
 
-    def get_by_language(self, yt, language, id):
+    def get_by_language(self, yt, language, id, folder):
         caption = yt.captions[language]
 
         if caption != None:
@@ -255,7 +255,7 @@ class Crawler:
 
             out_df = pd.DataFrame(captions, columns=['index', 'contents'])
 
-            out_df.to_csv(f"{self.path}/captions/{language}/caption_{id}.csv",
+            out_df.to_csv(f"{folder}/caption_{id}.csv",
                           index=False, encoding="utf-8-sig")
 
     def make_captions(self, df, is_En=False):
@@ -273,6 +273,15 @@ class Crawler:
         os.makedirs(folder_en, exist_ok=True)
         os.makedirs(folder_ko, exist_ok=True)
 
+        now = datetime.now()
+        micro = now.microsecond//10000
+
+        folder_ko = folder_ko+"/"+now.month+now.day+micro
+        os.makedirs(folder, exist_ok=True)
+        if is_En:
+            folder_en = folder_en+"/"+now.month+now.day+micro
+            os.makedirs(folder, exist_ok=True)
+
         for id in tqdm(df['id']):
 
             yt = YouTube(url+id)
@@ -280,7 +289,7 @@ class Crawler:
             # 한글 자막 확인
             try:
                 language = "ko"
-                self.get_by_language(yt, language, id)
+                self.get_by_language(yt, language, id, folder_ko)
                 cnt_ko += 1
             except:
                 pass
@@ -288,7 +297,7 @@ class Crawler:
             if is_En:
                 try:
                     language = "en"
-                    self.get_by_language(yt, language, id)
+                    self.get_by_language(yt, language, id, folder_en)
                     cnt_en += 1
                 except:
                     pass

@@ -6,6 +6,8 @@ from xml.etree import ElementTree
 from tqdm import tqdm
 import pandas as pd
 import os
+import html
+from datetime import datetime
 
 
 class Crawler:
@@ -42,7 +44,7 @@ class Crawler:
 
         return 1
 
-    def get_search_list(self, query, topicId=None, videoCaption=any, maxResult=50, regionCode="KR", nextPageToken=None):
+    def get_search_list(self, query, topicId=None, videoCaption=None, maxResult=50, regionCode="KR", nextPageToken=None):
 
         return self.youtube.search().list(
             q=query,
@@ -55,7 +57,7 @@ class Crawler:
             pageToken=nextPageToken
         ).execute()
 
-    def youtube_search(self, query, topicId=None, videoCaption=any, maxResult=50, regionCode="KR"):
+    def youtube_search(self, query, topicId=None, videoCaption=None, maxResult=50, regionCode="KR"):
         """
 
 
@@ -147,7 +149,7 @@ class Crawler:
 
         videoCaption:
 
-        any – 캡션 사용 여부에 따라 결과를 필터링하지 않습니다.
+        None – 캡션 사용 여부에 따라 결과를 필터링하지 않습니다.
         closedCaption – 캡션이 있는 동영상만 포함합니다.
         none – 캡션이 없는 동영상만 포함합니다.
 
@@ -174,7 +176,7 @@ class Crawler:
             print(f"사용중인 키 : {self.key_list[self.key_index]}")
             print("검색중...")
             search_response = self.get_search_list(
-                self.youtube, query, topicId, videoCaption, maxResult, regionCode)
+                query, topicId, videoCaption, maxResult, regionCode)
         except:
             if self.change_key() == 0:
                 return 0
@@ -183,7 +185,7 @@ class Crawler:
 
             print("다시 검색중...")
             search_response = self.get_search_list(
-                self.youtube, query, topicId, videoCaption, maxResult, regionCode)
+                query, topicId, videoCaption, maxResult, regionCode)
 
         videos = []
 
@@ -196,7 +198,7 @@ class Crawler:
             try:
                 if 'nextPageToken' in search_response:
                     search_response = self.get_search_list(
-                        self.youtube, query, topicId, videoCaption, maxResult, regionCode, search_response['nextPageToken'])
+                        query, topicId, videoCaption, maxResult, regionCode, search_response['nextPageToken'])
                 else:
 
                     break
@@ -208,7 +210,7 @@ class Crawler:
                 # 다음 키를 가져와서 다시 실행
                 if 'nextPageToken' in search_response:
                     search_response = self.get_search_list(
-                        self.youtube, query, topicId, videoCaption, maxResult, regionCode, search_response['nextPageToken'])
+                        query, topicId, videoCaption, maxResult, regionCode, search_response['nextPageToken'])
                 else:
                     break
 
@@ -217,12 +219,17 @@ class Crawler:
         df = pd.DataFrame(videos, columns=['id', 'title'])
         df = df.drop_duplicates()  # 혹시 모를 중복 제거
 
+        cnt_videos = len(df)
+
+        df.index = range(cnt_videos)
+
+        for i, v in enumerate(df['title']):
+            df.loc[i, 'title'] = (html.unescape(v))
+
         # 직접 csv까지 만들어주기엔 폴더명 등 제약사항있음
 
-        # df.to_csv(f"{folder_ids}/{query}_videoIds.csv",
-        #           index=False, encoding="utf-8-sig")
-
-        cnt_videos = len(df)
+        df.to_csv(f"{folder_ids}/{query}_videoIds.csv",
+                  index=False, encoding="utf-8-sig")
 
         print(f"검색어 : {query} 영상 갯수 : {cnt_videos}")
 
@@ -243,7 +250,7 @@ class Crawler:
             for i, element in enumerate(iter_element):
                 caption = {}
                 caption['index'] = i
-                caption['contents'] = element.text  # 자막 내용 저장
+                caption['contents'] = html.unescape(element.text)  # 자막 내용 저장
                 captions.append(caption)
 
             out_df = pd.DataFrame(captions, columns=['index', 'contents'])
@@ -265,6 +272,7 @@ class Crawler:
         folder_ko = f'{self.path}/captions/'+'ko'
         os.makedirs(folder_en, exist_ok=True)
         os.makedirs(folder_ko, exist_ok=True)
+
         for id in tqdm(df['id']):
 
             yt = YouTube(url+id)

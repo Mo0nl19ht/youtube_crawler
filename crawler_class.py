@@ -263,6 +263,12 @@ class Crawler:
                           index=False, encoding="utf-8-sig")
 
     def make_captions(self, df, is_En=False):
+        """
+        자막을 만들어 폴더에 저장합니다
+
+        자막이 없는 id들을 반환합니다
+
+        """
 
         print()
         print(f"자막 생성중")
@@ -270,8 +276,14 @@ class Crawler:
 
         url = "https://youtube.com/watch?v="
 
+        ko_no = []
+        en_no = []
+
         cnt_ko = 0
         cnt_en = 0
+
+        cnt_ko_no = 0
+        cnt_en_no = 0
         folder_en = f'{self.path}/captions/'+'en'
         folder_ko = f'{self.path}/captions/'+'ko'
         os.makedirs(folder_en, exist_ok=True)
@@ -289,15 +301,18 @@ class Crawler:
             os.makedirs(folder_en, exist_ok=True)
 
         for id in tqdm(df['id']):
-
-            yt = YouTube(url+id)
-
+            try:
+                yt = YouTube(url+id)
+            except:
+                print(f"id : {id} 이 영상은 외부 접근이 불가합니다")
             # 한글 자막 확인
             try:
                 language = "ko"
                 self.get_by_language(yt, language, id, folder_ko)
                 cnt_ko += 1
             except:
+                cnt_ko_no += 1
+                ko_no.append(id)
                 pass
             # 영어 자막
             if is_En:
@@ -306,6 +321,14 @@ class Crawler:
                     self.get_by_language(yt, language, id, folder_en)
                     cnt_en += 1
                 except:
+                    cnt_en_no += 1
+                    en_no.append(id)
                     pass
 
         print(f"한글자막 : {cnt_ko}개 영어자막 : {cnt_en}개\n")
+        print(f"한글자막 : {cnt_ko_no}개 없음 영어자막 : {cnt_en_no}개 없음")
+
+        if is_En:
+            return ko_no, en_no
+        else:
+            return ko_no

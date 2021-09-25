@@ -16,7 +16,8 @@ key_cnt = 0
 
 
 key_list = [
-
+    'AIzaSyDvYlauzOBv1UPrFDy7LsjNXrsA96ikoiY',
+    'AIzaSyAA770s7eAbHt2FInVXW4q5bLBXK9fkDe4'
 ]
 key_len = len(key_list)
 
@@ -50,41 +51,39 @@ def get_by_language(yt, language, spot, id):
 # 다음 페이지 가져오는거는 nextPageToken할당해줘야함
 
 
-# def get_search_list(youtube, query, nextPageToken=None):
-#     return youtube.search().list(
-#         q=query,
-#         part="id,snippet",
-#         maxResults="50",  # options.max_results,
-#         # regionCode="KR" 안해도되려나
-#         topicId="/m/019_rr, /m/07bxq, /m/03glg",  # lifestyle, tourism, hobby
-#         type="video",
-#         videoCaption="closedCaption",  # 캡션 있는 동영상만
-#         pageToken=nextPageToken
-#     ).execute()
+def get_search_list(youtube, query, nextPageToken=None):
+    return youtube.search().list(
+        q=query,
+        part="id,snippet",
+        maxResults="50",  # options.max_results,
+        # regionCode="KR" 안해도되려나
+        topicId="/m/019_rr, /m/07bxq, /m/03glg",  # lifestyle, tourism, hobby
+        type="video",
+        videoCaption="closedCaption",  # 캡션 있는 동영상만
+        pageToken=nextPageToken
+    ).execute()
 
-# # 할당량이 끝난 키를 바꿔준다
+# 할당량이 끝난 키를 바꿔준다
 
 
-# def change_key():
-#     global key_index
-#     global key_cnt
+def change_key():
+    global key_index
+    global key_cnt
 
-#     key_index += 1
-#     key_index %= key_len
-#     key_cnt += 1
+    key_index += 1
+    key_index %= key_len
+    key_cnt += 1
 
-#     if key_cnt >= key_len:  # key 한바퀴 다 돌았을 때 프로그램 종료
-#         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-#         print("주어진 키 모두사용")
-#         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-#         return 0
+    if key_cnt >= key_len:  # key 한바퀴 다 돌았을 때 프로그램 종료
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        print("주어진 키 모두사용")
+        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+        return 0
 
-#     print(f"{key_index} 으로 키 바꿈")
-#     print(f"key_cnt == {key_cnt}")
+    print(f"{key_index} 으로 키 바꿈")
+    print(f"key_cnt == {key_cnt}")
 
-#     return 1
-
-# 영상 찾기를 시작함
+    return 1
 
 
 def youtube_search(spot):

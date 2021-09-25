@@ -60,7 +60,7 @@ def change_key():
 # 영상 찾기를 시작함
 
 
-def youtube_search(spot, df):
+def get_descriptions(spot, df):
 
     global key_index
     global key_cnt

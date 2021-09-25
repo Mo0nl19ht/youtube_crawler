@@ -8,7 +8,7 @@ setup(
     author_email='mool1997@naver.com',
     url='https://github.com/Mo0nl19ht/youtube_crawler',
     install_requires=['google-api-python-client',
-                      'oauth2client', 'pytube3' 'tqdm', 'pandas'],
+                      'oauth2client', 'pytube' 'tqdm', 'pandas'],
     packages=find_packages(exclude=[]),
     keywords=['youtube', 'crawler', 'textdata'],
     python_requires='>=3',

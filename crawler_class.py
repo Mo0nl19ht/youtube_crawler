@@ -1,3 +1,4 @@
+from unicodedata import name
 from apiclient.discovery import build
 from apiclient.errors import HttpError
 from oauth2client.tools import argparser
@@ -228,7 +229,10 @@ class Crawler:
 
         # 직접 csv까지 만들어주기엔 폴더명 등 제약사항있음
 
-        df.to_csv(f"{folder_ids}/{query}_videoIds.csv",
+        now = datetime.now()
+        mic = now.microsecond//10000
+        n = f"{now.month}{now.day}_{now.hour}_{now.minute}_{mic}"
+        df.to_csv(f"{folder_ids}/{n}_videoIds.csv",
                   index=False, encoding="utf-8-sig")
 
         print(f"검색어 : {query} 영상 갯수 : {cnt_videos}")
@@ -275,12 +279,14 @@ class Crawler:
 
         now = datetime.now()
         micro = now.microsecond//10000
+        na = f"{now.month}{now.day}_{now.hour}_{now.minute}_{micro}"
 
-        folder_ko = folder_ko+"/"+now.month+now.day+micro
-        os.makedirs(folder, exist_ok=True)
+        folder_ko = folder_ko+"/"+na
+
+        os.makedirs(folder_ko, exist_ok=True)
         if is_En:
-            folder_en = folder_en+"/"+now.month+now.day+micro
-            os.makedirs(folder, exist_ok=True)
+            folder_en = folder_en+"/"+na
+            os.makedirs(folder_en, exist_ok=True)
 
         for id in tqdm(df['id']):
 

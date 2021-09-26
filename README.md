@@ -25,12 +25,12 @@ https://velog.io/@yhe228/Youtube-API%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%B4-%EB%8D
 ### 아래 코드로 모든 크롤링이 끝납니다
 
 ```jsx
-from youtube_crawler import Crawler
+from youtubecrawling import youtubecrawling
 
 key_list=[ "asdasd", "bddfg", "hgfd"]
 
 # 크롤러 호출
-c = Crawler("D:/youtube_crawler", key_list)
+c = youtubecrawling.Crawler("D:/youtube_crawler", key_list)
 
 # 블랙핑크로 유튜브 검색 , id, 제목 크롤링
 df = c.youtube_search("블랙핑크")

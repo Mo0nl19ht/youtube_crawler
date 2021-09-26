@@ -1,6 +1,20 @@
 # y**outube_crawler**
 
-## 유튜브 API를 이용하여 여러 텍스트 정보를 크롤링합니다
+유튜브 API를 이용하여 매우 쉽게! 여러 텍스트 정보를 크롤링하고 저장합니다
+
+정식 api를 이용하여 크롤링하기에 안정성이 높습니다
+
+할당량을 모두 사용하면 크롤링이 되지 않기에 api키를 여러개 가지고 있으면 좋습니다
+
+구글 계정당 1개씩 발급 가능하니 구글 계정이 많다면 여러개의 키를 사용 가능합니다
+
+발급 방법
+
+https://velog.io/@yhe228/Youtube-API%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%B4-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EA%B0%80%EC%A0%B8%EC%98%A4%EA%B8%B0
+
+처음에 API key리스트를 입력받아 자동으로 할당량이 끝나면 다른 키로 바꿔줍니다.
+
+크롤링 항목
 
 -   영상 id (URL)
 -   제목
@@ -8,7 +22,23 @@
 -   댓글
 -   자막 - pytube 라이브러리 사용
 
-## 자신이 가지고 있는 API key들을 할당량이 끝나면 자동으로 바꿔줍니다
+### 아래 코드로 모든 크롤링이 끝납니다
+
+```pyhton
+from youtube_crawler import Crawler
+
+key_list=[ "asdasd", "bddfg", "hgfd"]
+# 크롤러 호출
+c = Crawler("D:/youtube_crawler", key_list, 2)
+# 블랙핑크로 유튜브 검색 , id, 제목 크롤링
+df = c.youtube_search("블랙핑크")
+# 블랙핑크 영상 자막 크롤링
+cap_no = c.make_captions(df)
+# 영상 댓글 크롤링
+com_no = c.get_comments(df)
+# 상세정보 크롤링
+desc = c.get_descriptions(df)
+```
 
 ## 사용 라이브러리
 
@@ -20,11 +50,7 @@
 -   tqdm
 -   pandas
 
-# 메소드
-
-```jsx
-from youtube_crawler import Crawler
-```
+# 기능 상세 설명
 
 ## Crawler
 
@@ -34,8 +60,10 @@ yc = Crawler(path , key_list, key_index=0)
 #예시
 
 key_list=[ "asdasd", "bddfg", "hgfd"]
-
-yc = Crawler("D:/youtube_crawler", key_list, 3)
+# "D:/youtube_crawler"에 파일들 저장
+# api는 key_list로 사용
+# 2번째 인덱스에 해당되는 키부터 사용
+yc = Crawler("D:/youtube_crawler", key_list, 2)
 ```
 
 Crawler 를 불러옵니다

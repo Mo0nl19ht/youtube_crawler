@@ -227,7 +227,6 @@ query로 검색하고 관련 영상의 id들을 저장하고 DataFrame을 반환
     -   파일이름 : 실행한 시간\_videoIds.csv
 -   pandas.DataFrame 반환
 
-![example](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/5ea8e970-7c32-4210-a236-818f613c1b49/Untitled.png)
 
 ## make_caption
 

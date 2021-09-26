@@ -188,3 +188,47 @@ cap_no = c.make_captions(df,True)
     -   columns= [ ' id', 'title']
 -   if_En
     -   영어 자막 가져올지 말지
+
+### return
+
+-   지정한 경로 내 catptions폴더에 저장
+-   자막이 없는 영상 id 리스트 반환
+-   columns=['index', 'contents']
+
+## get_comments
+
+```java
+com_no = c.get_comments(df)
+```
+
+해당 영상들의 댓글들과 좋아요 수(댓글)를 가져옵니다
+
+### parameter
+
+-   df
+    -   youtube_search를 통해 반환된 DataFrame
+    -   columns = ['id' ,'title]
+
+### return
+
+-   지정한 경로 내 comments폴더에 저장
+-   columns = ['author','comment','like']
+
+## get_descriptions
+
+```java
+desc = c.get_descriptions(df)
+```
+
+해당 영상들의 상세정보를 가져옵니다.
+
+### parameter
+
+-   df
+    -   youtube_search를 통해 반환된 DataFrame
+    -   columns = ['id' ,'title]
+
+### return
+
+-   지정한 경로 내 description폴더에 저장
+-   columns=['id', 'title', 'desc']

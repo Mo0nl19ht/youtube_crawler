@@ -111,17 +111,17 @@ Crawler 를 불러옵니다
 ## yotube_search
 
 ```python
-df = yc.youtube_search(query, topicId=None, videoCaption=None, regionCode="KR")
+df = c.youtube_search(query, topicId=None, videoCaption=None, regionCode="KR")
 
 #예시
 
 # 대한민국 영상 중 nlp 강의를 검색해서 가져오는데
 # topic정하지 않고 자막여부 상관없이 가져온다
-df = yc.youtbue_search("nlp 강의")
+df = c.youtbue_search("nlp 강의")
 
 # 대한민국 영상 중 블랙핑크를 검색해서 가져오는데
 # Music 과 Entertainment에 관련된 영상을 가져옴
-df = yc.youtube_search("블랙핑크",topicId="/m/04rlf, /m/02jjt")
+df = c.youtube_search("블랙핑크",topicId="/m/04rlf, /m/02jjt")
 ```
 
 query로 검색하고 관련 영상의 id들을 저장하고 DataFrame을 반환합니다

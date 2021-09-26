@@ -1,6 +1,6 @@
 # y**outube_crawler**
 
-유튜브 API를 이용하여 매우 쉽게! 여러 텍스트 정보를 크롤링하고 저장합니다
+유튜브 API를 이용하여 <b>매우 쉽게!</b> 여러 텍스트 정보를 크롤링하고 저장합니다
 
 정식 api를 이용하여 크롤링하기에 안정성이 높습니다
 
@@ -12,7 +12,7 @@
 
 https://velog.io/@yhe228/Youtube-API%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%B4-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EA%B0%80%EC%A0%B8%EC%98%A4%EA%B8%B0
 
-처음에 API key리스트를 입력받아 자동으로 할당량이 끝나면 다른 키로 바꿔줍니다.
+처음에 API key리스트를 입력받아 자동으로 <b>할당량이 끝나면 다른 키로 바꿔줍니다.</b>
 
 크롤링 항목
 
@@ -24,21 +24,37 @@ https://velog.io/@yhe228/Youtube-API%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%B4-%EB%8D
 
 ### 아래 코드로 모든 크롤링이 끝납니다
 
-```pyhton
+```jsx
 from youtube_crawler import Crawler
 
 key_list=[ "asdasd", "bddfg", "hgfd"]
+
 # 크롤러 호출
-c = Crawler("D:/youtube_crawler", key_list, 2)
+c = Crawler("D:/youtube_crawler", key_list)
+
 # 블랙핑크로 유튜브 검색 , id, 제목 크롤링
 df = c.youtube_search("블랙핑크")
+
 # 블랙핑크 영상 자막 크롤링
 cap_no = c.make_captions(df)
+
 # 영상 댓글 크롤링
 com_no = c.get_comments(df)
+
 # 상세정보 크롤링
 desc = c.get_descriptions(df)
 ```
+## 폴더 구조
+
+--지정한 폴더
+
+     :--videoIds
+  
+     :--captions
+     
+     :--comments
+  
+     :--description
 
 ## 사용 라이브러리
 

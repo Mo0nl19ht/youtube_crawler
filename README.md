@@ -21,6 +21,11 @@ https://velog.io/@yhe228/Youtube-API%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%B4-%EB%8D
 -   상세정보
 -   댓글
 -   자막 - pytube 라이브러리 사용
+### pip install
+
+```jsx
+pip install youtubecrawling
+```
 
 ### 아래 코드로 모든 크롤링이 끝납니다
 

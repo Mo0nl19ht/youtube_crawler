@@ -209,7 +209,7 @@ class Crawler:
                 if self.change_key() == 0:
                     return 0
 
-                youtube = self.get_youtube(self.key_list[self.key_index])
+                self.youtube = self.get_youtube(self.key_list[self.key_index])
                 # 다음 키를 가져와서 다시 실행
                 if 'nextPageToken' in search_response:
                     search_response = self.get_search_list(
@@ -341,7 +341,7 @@ class Crawler:
             id=id
         ).execute()
 
-    def get_descriptions(self,df):
+    def get_descriptions(self, df):
         """
         영상의 상세정보를 받아와서
         csv파일을 만들고
@@ -365,13 +365,13 @@ class Crawler:
                 search_response = self.get_search_list_desc(id)
 
             try:
-                search_result = search_response['items'][0]  
+                search_result = search_response['items'][0]
             # 영상이 접근 불가 처리된 경우
             except:
                 print(f"id : {id} 영상 접근 불가(비공개 or 삭제))")
                 pass
 
-            videos.append((id,title, search_result["snippet"]["description"]))
+            videos.append((id, title, search_result["snippet"]["description"]))
 
         df = pd.DataFrame(videos, columns=['id', 'title', 'desc'])
         df = df.drop_duplicates()  # 혹시 모를 중복 제거
@@ -379,13 +379,14 @@ class Crawler:
         now = datetime.now()
         mic = now.microsecond//10000
         n = f"{now.month}{now.day}_{now.hour}_{now.minute}_{mic}"
-        path=f"{self.path}/description"
+        path = f"{self.path}/description"
         os.makedirs(path, exist_ok=True)
         df.to_csv(f"{path}/{n}_title_desc.csv",
-                index=False, encoding="utf-8-sig")
-        
+                  index=False, encoding="utf-8-sig")
+
         return df
-    def get_search_list_comment(self, id,pageToken=None):
+
+    def get_search_list_comment(self, id, pageToken=None):
         return self.youtube.commentThreads().list(
             part='snippet',
             videoId=id,
@@ -393,15 +394,15 @@ class Crawler:
             maxResults=100
         ).execute()
 
-    def get_comments(self,df):
+    def get_comments(self, df):
         """
         영상의 댓글을 가져와서 저장합니다.
         댓글을 가져오는데 실패한 영상의 id들을 반환합니다
 
         """
-        path=f"{self.path}/comments"
+        path = f"{self.path}/comments"
         os.makedirs(path, exist_ok=True)
-        cnt=0
+        cnt = 0
         no = []
         print("댓글 정보를 가져옵니다")
 
@@ -417,38 +418,41 @@ class Crawler:
                 print("키 변경\n다시 검색중...\n")
                 search_response = self.get_search_list_comment(id)
 
-            
             comments = []
 
             while search_response:
 
                 for search_result in search_response['items']:
                     comment = search_result['snippet']['topLevelComment']['snippet']
-                    comments.append([html.unescape(comment['authorDisplayName']),html.unescape(comment['textDisplay']), comment['likeCount']])
+                    comments.append([html.unescape(comment['authorDisplayName']), html.unescape(
+                        comment['textDisplay']), comment['likeCount']])
                 try:
                     if 'nextPageToken' in search_response:
-                        search_response = self.get_search_list_comment(id, search_response['nextPageToken'])
+                        search_response = self.get_search_list_comment(
+                            id, search_response['nextPageToken'])
                     else:
                         break
                 except:
                     if self.change_key() == 0:
                         return 0
-                    self.youtube = self.get_youtube(self.key_list[self.key_index])
+                    self.youtube = self.get_youtube(
+                        self.key_list[self.key_index])
                     # 다음 키를 가져와서 다시 실행
                     if 'nextPageToken' in search_response:
-                        search_response = self.get_search_list_comment(id, search_response['nextPageToken'])
+                        search_response = self.get_search_list_comment(
+                            id, search_response['nextPageToken'])
                     else:
                         break
             try:
                 df = pd.DataFrame(comments)
-                df.columns=['author','comment','like']
+                df.columns = ['author', 'comment', 'like']
                 df.to_csv(f"{path}/{id}_comments.csv",
-                        index=False, encoding="utf-8-sig")
+                          index=False, encoding="utf-8-sig")
             except:
-                cnt+=1
+                cnt += 1
                 no.append(id)
                 pass
-        
+
         print(f"{len(df)}중의 {cnt}개의 영상의 댓글을 불러오는데 실패하였습니다")
 
         return no

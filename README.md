@@ -32,12 +32,12 @@ pip install youtubecrawling
 ### 아래 코드로 모든 크롤링이 끝납니다
 
 ```jsx
-from youtubecrawling import youtubecrawling
+import youtubecrawling
 
 key_list=[ "asdasd", "bddfg", "hgfd"]
 
 # 크롤러 호출
-c = youtubecrawling.Crawler("D:/youtube_crawler", key_list)
+c = Crawler("D:/youtube_crawler", key_list)
 
 # 블랙핑크로 유튜브 검색 , id, 제목 크롤링
 df = c.youtube_search("블랙핑크")

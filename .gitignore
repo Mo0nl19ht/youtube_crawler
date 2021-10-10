@@ -1,3 +1,6 @@
+youtubecrawling.egg-info
+dist
+build
 sdf.ipynb
 
 title_description_parser.py

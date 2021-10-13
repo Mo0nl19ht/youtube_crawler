@@ -32,7 +32,7 @@ pip install youtubecrawling
 ### 아래 코드로 모든 크롤링이 끝납니다
 
 ```jsx
-import youtubecrawling
+from youtubecrawling import Crawler
 
 key_list=[ "asdasd", "bddfg", "hgfd"]
 

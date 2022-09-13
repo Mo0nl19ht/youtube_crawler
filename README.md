@@ -75,6 +75,7 @@ desc = c.get_descriptions(df)
 
 감사합니다
 
+[오픈소스 컨트리뷰션에서 발표한 오픈소스 개발기입니다](https://docs.google.com/presentation/d/1mWZVEr4tZHdkRPYPBzxuDfE1k1uGimAj/edit?usp=sharing&ouid=109412504811007478020&rtpof=true&sd=true)
 
 ## 사용 라이브러리
 
